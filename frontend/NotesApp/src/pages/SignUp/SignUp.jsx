@@ -2,7 +2,8 @@ import React from 'react'
 
 function SignUp() {
   return (
-    <div>SignUp</div>
+    <div><navbar/></div>
+    
   )
 }
 
