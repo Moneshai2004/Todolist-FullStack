@@ -3,30 +3,30 @@ import Navbar from "../../components/Navbar/Navbar";
 import { Link } from "react-router-dom";
 import PasswordInput from "../../components/input/PasswordInput";
 import { validateEmail } from "../../utils/helper";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
-  const handleLogin = async (e)=>{
+  const handleLogin = async (e) => {
     e.preventDefault();
-     console.log('Email:', email);
-    console.log('Is email valid?', validateEmail(email));
-    
-    if (!validateEmail(email)){
+    console.log("Email:", email);
+    console.log("Is email valid?", validateEmail(email));
+
+    if (!validateEmail(email)) {
       setError("Please enter a valid email address");
       return;
     }
-    if (!password){
-      setError("Please enter a password");
+    if (!password) {
+      setError("Please enter the password");
       return;
     }
-    
 
-    setError("")
+    setError("");
 
     // login api
-  }
+  };
 
   return (
     <>
