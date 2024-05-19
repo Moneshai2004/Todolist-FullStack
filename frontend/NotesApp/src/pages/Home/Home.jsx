@@ -11,6 +11,12 @@ const Home = () => {
     type: "add",
     data: null,
   });
+
+  // Function to close the modal
+  const closeModal = () => {
+    setOpenAddEditModal({ isShown: false, type: "add", data: null });
+  };
+
   return (
     <>
       <Navbar />
@@ -19,10 +25,12 @@ const Home = () => {
           <NoteCard
             title="meeting on 7th may"
             date="3rd apr 2004"
-            content="meeting on 7 th april meeting on the april"
+            content="meeting on 7th april meeting on the april"
             tags="#meeting"
             isPinned={true}
-            onEdit={() => {}}
+            onEdit={() => {
+              setOpenAddEditModal({ isShown: true, type: "edit", data: { title: "meeting on 7th may", date: "3rd apr 2004", content: "meeting on 7th april meeting on the april", tags: ["#meeting"], isPinned: true } });
+            }}
             onDelete={() => {}}
             onPinNote={() => {}}
           />
@@ -34,20 +42,25 @@ const Home = () => {
           setOpenAddEditModal({ isShown: true, type: "add", data: null });
         }}
       >
-        <MdAdd className="text-[32px]  text-white" />
+        <MdAdd className="text-[32px] text-white" />
       </button>
 
       <Modal
         isOpen={openAddEditModal.isShown}
-        onRequestClose={() => {}}
+        onRequestClose={closeModal}
         style={{
           overlay: {
-            backgroundColour: "rgba(0,0,0,0.2)",
+            backgroundColor: "rgba(0,0,0,0.2)",
           },
         }}
-        contentLabel=""
-        className="w-[40%] max-h-3/4 bg-white rounded-md mx-auto mt-14 p-5 overflow-scroll">
-        <AddEditNotes />
+        contentLabel="Add/Edit Note"
+        className="w-full max-w-lg max-h-3/4 bg-white rounded-md mx-auto mt-14 p-5 overflow-scroll"
+      >
+        <AddEditNotes
+          type={openAddEditModal.type}
+          noteData={openAddEditModal.data}
+          onClose={closeModal} // Make sure to use the correct casing here
+        />
       </Modal>
     </>
   );
