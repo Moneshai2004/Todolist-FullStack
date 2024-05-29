@@ -67,7 +67,25 @@ app.post("/create-account", async (req, res) => {
     message: "Registration Successful",
   });
 });
+// login
 
+app.post("/login",async(req,res)=>{
+  const {email,password}=req.body;
+
+  if(!email){
+    return res.status(400).json({error:true,message:"email is required"});
+  }
+  if(!password){
+    return res.status(400).json({error:true,message:"password is required"});
+    }
+
+    const userInfo = await User.findOne({email:email})
+
+    if(!userInfo){
+      return res.status(400).json({error:true,message:"user not found"});
+    }
+    if (userInfo)
+})
 mongoose.connect(
   "mongodb+srv://monesh:Monesh23@monesh.brclugk.mongodb.net/monesh"
 );
