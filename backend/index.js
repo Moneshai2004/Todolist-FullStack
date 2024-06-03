@@ -17,6 +17,7 @@ app.get("/", (req, res) => {
   res.json({ data: "hello" });
 });
 
+
 // create account
 app.post("/create-account", async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -84,8 +85,28 @@ app.post("/login",async(req,res)=>{
     if(!userInfo){
       return res.status(400).json({error:true,message:"user not found"});
     }
-    if (userInfo)
+    if (userInfo){
+      const isMatch = await bcrypt.compare(password,userInfo.password);
+    }
+    if(userInfo.email == email && userInfo.password == password){
+      const User={user:userInfo};
+      const accessToken = jwt.sign(User,process.env.ACCESS_TOKEN_SECRET,{
+        expiresIn:"1hr",
+      })
+      return res.json({
+        error:false,
+        message:"login successful",
+        email,
+        accessToken
+      })
+} else{
+  return res.status(400).json({
+    error:true,
+    message:"invalid credentials"
+  })
+}
 })
+
 mongoose.connect(
   "mongodb+srv://monesh:Monesh23@monesh.brclugk.mongodb.net/monesh"
 );
