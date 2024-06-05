@@ -1,9 +1,9 @@
 require("dotenv").config();
 const express = require("express");
+const axios = require("axios");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-
 const User = require("./models/user.model");
 const Note = require("./models/note.model");
 
@@ -38,11 +38,16 @@ app.post("/create-account", async (req, res) => {
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "1h" }
     );
+    const refreshToken = jwt.sign(
+      { id: newUser._id },
+      process.env.REFRESH_TOKEN_SECRET
+    );
 
     return res.json({
       error: false,
       user: newUser,
       accessToken,
+      refreshToken,
       message: "Registration successful",
     });
   } catch (err) {
@@ -72,36 +77,40 @@ app.post("/login", async (req, res) => {
     const accessToken = jwt.sign(
       { id: userInfo._id },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1hr" }
+      { expiresIn: "1h" }
+    );
+    const refreshToken = jwt.sign(
+      { id: userInfo._id },
+      process.env.REFRESH_TOKEN_SECRET
     );
 
     return res.json({
       error: false,
       message: "Login successful",
-      email,
       accessToken,
+      refreshToken,
     });
   } catch (err) {
     return res.status(500).json({ error: true, message: "Internal error" });
   }
 });
-//get user
-app.get("/get-user", authenticateToken ,async (req, res) => {
-  const { user} =req.user;
 
-  const isUser = await User.findOne({ _id: user._id });
+// Get new access token using refresh token
+app.post("/token", (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.sendStatus(401);
 
+  jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
 
-  if(!isUser){
-    return res.sendStatus(401);
-
-  }
-  return res.json({
-    user:isUser,
-    message:"",
-  })
-})
-
+    const accessToken = jwt.sign(
+      { id: user.id },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "1h" }
+    );
+    res.json({ accessToken });
+  });
+});
 
 // Middleware for authentication
 function authenticateToken(req, res, next) {
@@ -109,18 +118,39 @@ function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    return res.sendStatus(401);
+    return res.sendStatus(401); // No token provided
   }
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
     if (err) {
-      console.error("Token Verification Error:", err);
-      return res.sendStatus(403);
+      if (err.name === "TokenExpiredError") {
+        return res
+          .status(403)
+          .json({ message: "TokenExpiredError", expiredAt: err.expiredAt });
+      }
+      return res.sendStatus(403); // Invalid token
     }
-    req.user = user; // Assign the decoded payload to req.user
+    req.user = user;
     next();
   });
 }
+
+// Get user details
+app.get("/get-user", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.sendStatus(404); // User not found
+    }
+    res.json({
+      user,
+      message: "User retrieved successfully",
+    });
+  } catch (err) {
+    console.error("Error retrieving user:", err);
+    res.status(500).json({ error: true, message: "Internal error" });
+  }
+});
 
 // Add note
 app.post("/add-notes", authenticateToken, async (req, res) => {
@@ -168,7 +198,7 @@ app.put("/edit-notes/:noteId", authenticateToken, async (req, res) => {
     if (title) note.title = title;
     if (content) note.content = content;
     if (tags) note.tags = tags;
-    if (typeof isPinned !== 'undefined') note.isPinned = isPinned;
+    if (typeof isPinned !== "undefined") note.isPinned = isPinned;
 
     await note.save();
     return res.json({ error: false, message: "Note updated successfully" });
@@ -191,7 +221,6 @@ app.get("/get-all-notes", authenticateToken, async (req, res) => {
       .status(500)
       .json({ error: true, message: "Error retrieving notes" });
   }
-
 });
 
 // Delete note
@@ -218,7 +247,7 @@ app.put("/update-notes/:noteId", authenticateToken, async (req, res) => {
   const { isPinned } = req.body;
 
   try {
-    const note = await Note.findOne({ _id: noteId, userId: req.user._id });
+    const note = await Note.findOne({ _id: noteId, userId: req.user.id });
 
     if (!note) {
       return res.status(404).json({ error: true, message: "Note not found" });
@@ -235,7 +264,9 @@ app.put("/update-notes/:noteId", authenticateToken, async (req, res) => {
 
 mongoose.connect(
   "mongodb+srv://monesh:Monesh23@monesh.brclugk.mongodb.net/monesh",
-  { socketTimeoutMS: 30000 }
+  {
+    socketTimeoutMS: 30000,
+  }
 );
 
 app.listen(8000, () => {
