@@ -14,13 +14,14 @@ const Home = () => {
     data: null,
   });
   const [userInfo, setUserInfo] = useState(null);
+  const [AllNotes, setAllNotes] = useState([]);
 
   const navigate = useNavigate();
 
   const getUserInfo = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axiosInstance.get("get-user", {
+      const token = localStorage.getItem("accessToken"); // Corrected token key
+      const response = await axiosInstance.get("/get-user", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -38,12 +39,22 @@ const Home = () => {
     }
   };
 
+  const getAllNotes = async () => {
+    try {
+      const response = await axiosInstance.get("/get-all-notes"); // Corrected endpoint
+      if (response.data && response.data.notes) {
+        setAllNotes(response.data.notes);
+      }
+    } catch (error) {
+      console.log("An unexpected error occurred:", error);
+    }
+  };
+
   useEffect(() => {
     getUserInfo();
-    return () => {};
+    getAllNotes();
   }, []);
 
-  // Function to close the modal
   const closeModal = () => {
     setOpenAddEditModal({ isShown: false, type: "add", data: null });
   };
@@ -53,28 +64,19 @@ const Home = () => {
       <Navbar userInfo={userInfo} />
       <div className="container mx-auto">
         <div className="grid grid-cols-3 gap-4 mt-8">
-          <NoteCard
-            title="meeting on 7th may"
-            date="3rd apr 2004"
-            content="meeting on 7th april meeting on the april"
-            tags="#meeting"
-            isPinned={true}
-            onEdit={() => {
-              setOpenAddEditModal({
-                isShown: true,
-                type: "edit",
-                data: {
-                  title: "meeting on 7th may",
-                  date: "3rd apr 2004",
-                  content: "meeting on 7th april meeting on the april",
-                  tags: ["#meeting"],
-                  isPinned: true,
-                },
-              });
-            }}
-            onDelete={() => {}}
-            onPinNote={() => {}}
-          />
+          {AllNotes.map((item) => (
+            <NoteCard
+              key={item._id}
+              title={item.title}
+              date={item.createdOn}
+              content={item.content}
+              tags={item.tags}
+              isPinned={item.isPinned}
+              onEdit={() => {}}
+              onDelete={() => {}}
+              onPinNote={() => {}}
+            />
+          ))}
         </div>
       </div>
       <button
