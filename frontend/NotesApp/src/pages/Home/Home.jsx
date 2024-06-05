@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
 import NoteCard from "../../components/cards/NoteCard";
+import { useNavigate } from "react-router-dom";
 import { MdAdd } from "react-icons/md";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
+import axiosInstance from "../../utils/axiosInstances";
 
 const Home = () => {
   const [openAddEditModal, setOpenAddEditModal] = useState({
@@ -11,6 +13,35 @@ const Home = () => {
     type: "add",
     data: null,
   });
+  const [userInfo, setUserInfo] = useState(null);
+
+  const navigate = useNavigate();
+
+  const getUserInfo = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axiosInstance.get("get-user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.data && response.data.user) {
+        setUserInfo(response.data.user);
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        localStorage.clear();
+        navigate("/login");
+      } else {
+        console.error("Error fetching user info:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getUserInfo();
+    return () => {};
+  }, []);
 
   // Function to close the modal
   const closeModal = () => {
@@ -19,7 +50,7 @@ const Home = () => {
 
   return (
     <>
-      <Navbar />
+      <Navbar userInfo={userInfo} />
       <div className="container mx-auto">
         <div className="grid grid-cols-3 gap-4 mt-8">
           <NoteCard
@@ -29,7 +60,17 @@ const Home = () => {
             tags="#meeting"
             isPinned={true}
             onEdit={() => {
-              setOpenAddEditModal({ isShown: true, type: "edit", data: { title: "meeting on 7th may", date: "3rd apr 2004", content: "meeting on 7th april meeting on the april", tags: ["#meeting"], isPinned: true } });
+              setOpenAddEditModal({
+                isShown: true,
+                type: "edit",
+                data: {
+                  title: "meeting on 7th may",
+                  date: "3rd apr 2004",
+                  content: "meeting on 7th april meeting on the april",
+                  tags: ["#meeting"],
+                  isPinned: true,
+                },
+              });
             }}
             onDelete={() => {}}
             onPinNote={() => {}}
@@ -59,7 +100,7 @@ const Home = () => {
         <AddEditNotes
           type={openAddEditModal.type}
           noteData={openAddEditModal.data}
-          onClose={closeModal} // Make sure to use the correct casing here
+          onClose={closeModal}
         />
       </Modal>
     </>
