@@ -1,19 +1,18 @@
 import axios from "axios";
-import { BASE_URL } from "./constants.js";
 
 const axiosInstance = axios.create({
-  baseURL: BASE_URL,
-  timeout: 10000,
+  baseURL: "http://localhost:8000", // Replace with your actual API URL
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+// Add a request interceptor to include the authorization token in every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem("token");
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`; // "Bearer" should be capitalized
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },
@@ -22,4 +21,4 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-export default axiosInstance; // Export the axios instance
+export default axiosInstance;

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { MdClose } from "react-icons/md";
 import TagInput from "../../components/input/TagInput";
+import axiosInstance from "/home/moni/Desktop/Notes_App/frontend/NotesApp/src/utils/axiosInstances.js";
 
-const AddEditNotes = ({ noteData, type, onClose }) => { // Use camelCase for `onClose`
+const AddEditNotes = ({ noteData, type, getAllNotes, onClose }) => {
   const [title, setTitle] = useState(noteData?.title || "");
   const [content, setContent] = useState(noteData?.content || "");
   const [tags, setTags] = useState(noteData?.tags || []);
@@ -10,12 +11,44 @@ const AddEditNotes = ({ noteData, type, onClose }) => { // Use camelCase for `on
 
   // Add note
   const addNewNote = async () => {
-    // Add note logic here
+    try {
+      const response = await axiosInstance.post("/add-notes", {
+        title,
+        content,
+        tags,
+      });
+      if (response.data && response.data.note) {
+        getAllNotes();
+        onClose();
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("An unexpected error occurred.");
+      }
+    }
   };
 
   // Edit note
   const editNote = async () => {
-    // Edit note logic here
+    try {
+      const response = await axiosInstance.put(`/edit-note/${noteData._id}`, {
+        title,
+        content,
+        tags,
+      });
+      if (response.data && response.data.note) {
+        getAllNotes();
+        onClose();
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("An unexpected error occurred.");
+      }
+    }
   };
 
   const handleAddNote = () => {
@@ -39,7 +72,7 @@ const AddEditNotes = ({ noteData, type, onClose }) => { // Use camelCase for `on
     <div className="relative">
       <button
         className="w-10 h-10 rounded-full flex items-center justify-center absolute -top-3 -right-3 hover:bg-slate-50"
-        onClick={onClose} // Use the correct prop
+        onClick={onClose}
       >
         <MdClose className="text-xl text-slate-400" />
       </button>

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { MdAdd } from "react-icons/md";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
-import axiosInstance from "../../utils/axiosInstances";
+import axiosInstance from "/home/moni/Desktop/Notes_App/frontend/NotesApp/src/utils/axiosInstances.js";
 
 const Home = () => {
   const [openAddEditModal, setOpenAddEditModal] = useState({
@@ -14,7 +14,7 @@ const Home = () => {
     data: null,
   });
   const [userInfo, setUserInfo] = useState(null);
-  const [AllNotes, setAllNotes] = useState([]);
+  const [allNotes, setAllNotes] = useState([]);
 
   const navigate = useNavigate();
 
@@ -59,12 +59,20 @@ const Home = () => {
     setOpenAddEditModal({ isShown: false, type: "add", data: null });
   };
 
+  const handleEdit = (note) => {
+    setOpenAddEditModal({
+      isShown: true,
+      type: "edit",
+      data: note,
+    });
+  };
+
   return (
     <>
       <Navbar userInfo={userInfo} />
       <div className="container mx-auto">
         <div className="grid grid-cols-3 gap-4 mt-8">
-          {AllNotes.map((item) => (
+          {allNotes.map((item) => (
             <NoteCard
               key={item._id}
               title={item.title}
@@ -72,7 +80,7 @@ const Home = () => {
               content={item.content}
               tags={item.tags}
               isPinned={item.isPinned}
-              onEdit={() => {}}
+              onEdit={() => handleEdit(item)}
               onDelete={() => {}}
               onPinNote={() => {}}
             />
@@ -103,6 +111,7 @@ const Home = () => {
           type={openAddEditModal.type}
           noteData={openAddEditModal.data}
           onClose={closeModal}
+          getAllNotes={getAllNotes}
         />
       </Modal>
     </>
