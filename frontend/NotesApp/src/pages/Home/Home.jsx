@@ -7,7 +7,6 @@ import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
 import axiosInstance from "../../utils/axiosInstances.js"; // Corrected import path
 
-
 const Home = () => {
   const [openAddEditModal, setOpenAddEditModal] = useState({
     isShown: false,
@@ -16,6 +15,7 @@ const Home = () => {
   });
   const [userInfo, setUserInfo] = useState(null);
   const [allNotes, setAllNotes] = useState([]);
+  const [error, setError] = useState(null); // Added error state
 
   const navigate = useNavigate();
 
@@ -54,17 +54,22 @@ const Home = () => {
   const deleteNote = async (noteId) => {
     try {
       const response = await axiosInstance.delete(`/delete-notes/${noteId}`);
-      if (response.data && !response.data.error) {
+      if (response.data && response.data.success) {
         getAllNotes();
       }
     } catch (error) {
-      console.log("An unexpected error occurred:", error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        console.log("An unexpected error occurred:", error);
+      }
     }
   };
 
   useEffect(() => {
     getUserInfo();
     getAllNotes();
+    return () => {};
   }, []);
 
   const closeModal = () => {
@@ -93,7 +98,7 @@ const Home = () => {
               tags={item.tags}
               isPinned={item.isPinned}
               onEdit={() => handleEdit(item)}
-                onDelete={() => deleteNote(item._id)}
+              onDelete={() => deleteNote(item._id)}
               onPinNote={() => {}}
             />
           ))}
