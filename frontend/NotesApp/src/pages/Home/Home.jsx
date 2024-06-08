@@ -5,7 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { MdAdd } from "react-icons/md";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
-import axiosInstance from "/home/moni/Desktop/Notes_App/frontend/NotesApp/src/utils/axiosInstances.js";
+import axiosInstance from "../../utils/axiosInstances.js"; // Corrected import path
+
 
 const Home = () => {
   const [openAddEditModal, setOpenAddEditModal] = useState({
@@ -20,7 +21,7 @@ const Home = () => {
 
   const getUserInfo = async () => {
     try {
-      const token = localStorage.getItem("accessToken"); // Corrected token key
+      const token = localStorage.getItem("accessToken");
       const response = await axiosInstance.get("/get-user", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -41,9 +42,20 @@ const Home = () => {
 
   const getAllNotes = async () => {
     try {
-      const response = await axiosInstance.get("/get-all-notes"); // Corrected endpoint
+      const response = await axiosInstance.get("/get-all-notes");
       if (response.data && response.data.notes) {
         setAllNotes(response.data.notes);
+      }
+    } catch (error) {
+      console.log("An unexpected error occurred:", error);
+    }
+  };
+
+  const deleteNote = async (noteId) => {
+    try {
+      const response = await axiosInstance.delete(`/delete-notes/${noteId}`);
+      if (response.data && !response.data.error) {
+        getAllNotes();
       }
     } catch (error) {
       console.log("An unexpected error occurred:", error);
@@ -81,7 +93,7 @@ const Home = () => {
               tags={item.tags}
               isPinned={item.isPinned}
               onEdit={() => handleEdit(item)}
-              onDelete={() => {}}
+                onDelete={() => deleteNote(item._id)}
               onPinNote={() => {}}
             />
           ))}
