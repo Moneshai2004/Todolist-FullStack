@@ -262,6 +262,10 @@ app.put("/update-notes/:noteId", authenticateToken, async (req, res) => {
   }
 });
 
+app.get("/health",(req,res)=>{
+  res.send("Backend is up")
+})
+
 mongoose.connect(
   "mongodb+srv://monesh:Monesh23@monesh.brclugk.mongodb.net/monesh",
   {
